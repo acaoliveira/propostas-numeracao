@@ -1,13 +1,18 @@
 import os
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
-from supabase import create_client, Client
 
 app = FastAPI()
 
 SUPABASE_URL = os.environ["SUPABASE_URL"]
 SUPABASE_KEY = os.environ["SUPABASE_KEY"]
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+HEADERS = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": f"Bearer {SUPABASE_KEY}",
+    "Content-Type": "application/json",
+}
 
 HTML = """
 <!DOCTYPE html>
@@ -174,8 +179,12 @@ def index():
 @app.post("/gerar")
 def gerar_numero():
     try:
-        res = supabase.rpc("gerar_proximo_numero").execute()
-        numero = res.data
+        res = httpx.post(
+            f"{SUPABASE_URL}/rest/v1/rpc/gerar_proximo_numero",
+            headers=HEADERS,
+        )
+        res.raise_for_status()
+        numero = res.json()
         return {"numero": f"PC{numero:05d}"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
