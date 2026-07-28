@@ -186,5 +186,7 @@ def gerar_numero():
         res.raise_for_status()
         numero = res.json()
         return {"numero": f"PC{numero:05d}"}
+    except httpx.HTTPStatusError as e:
+        raise HTTPException(status_code=500, detail=f"HTTP {e.response.status_code}: {e.response.text}")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {str(e)}")
